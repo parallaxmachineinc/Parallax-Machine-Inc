@@ -1,6 +1,38 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import ConcaveCarousel, { ConcaveCarouselItem } from "@/components/ConcaveCarousel";
+
+const SERVICE_CAROUSEL_ITEMS: ConcaveCarouselItem[] = [
+  {
+    src: "/services/websites.svg",
+    alt: "Websites & digital presence",
+    title: "Websites & digital presence",
+    subtitle:
+      "A useful digital asset, not just a page online. Business and portfolio sites, landing pages and redesigns, built responsive, accessible and fast.",
+  },
+  {
+    src: "/services/creative.svg",
+    alt: "Creative experiences",
+    title: "Creative experiences",
+    subtitle:
+      "Design with a reason to exist. Scroll-based storytelling, motion, 3D and illustration, and art-directed brand pages.",
+  },
+  {
+    src: "/services/tech.svg",
+    alt: "Technical build",
+    title: "Technical build",
+    subtitle:
+      "Creative ideas, reliably delivered. Right-fit technology, integrations and functionality, with performance and upkeep in mind.",
+  },
+  {
+    src: "/services/bespoke.svg",
+    alt: "Shaped around you",
+    title: "Shaped around you",
+    subtitle:
+      "Understand first, then assemble the solution: design, content and automation, scoped by your goals, with support for the next stage.",
+  },
+];
 
 const RADAR_ITEMS = [
   {
@@ -105,14 +137,6 @@ export default function Home() {
   // Section 02 (#why) Ref
   const tlRef = useRef<HTMLDivElement>(null);
 
-  // Section 04 (#services) Refs
-  const hzRef = useRef<HTMLElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
-  const pxRef = useRef<HTMLElement>(null);
-  const lvRef = useRef<HTMLDivElement>(null);
-  const panelsRef = useRef<(HTMLDivElement | null)[]>([]);
-  const stpRef = useRef<(HTMLElement | null)[]>([]);
 
   // Section 05 (#how) Ref
   const howRef = useRef<HTMLElement>(null);
@@ -278,39 +302,6 @@ export default function Home() {
       if (hd) hd.textContent = String(Math.round(sx - lerp(0.24 * W, -0.24 * W, p)));
     };
 
-    const fgColors = ["#f6fbf1", "#f6fbf1", "#f6fbf1", "#0c3b27"];
-
-    const horiz = () => {
-      const hz = hzRef.current;
-      const tr = trackRef.current;
-      const px = pxRef.current;
-      const lv = lvRef.current;
-      const stg = stageRef.current;
-      if (!hz || !tr || !px || !lv || !stg) return;
-
-      const pn = panelsRef.current.filter(Boolean) as HTMLDivElement[];
-      const stp = stpRef.current.filter(Boolean) as HTMLElement[];
-      const n = pn.length;
-      const m = hz.offsetHeight - window.innerHeight;
-      const p = clamp(-hz.getBoundingClientRect().top / m);
-      const u = p * (n - 1);
-
-      tr.style.transform = `translate3d(${-u * 100}vw, 0, 0)`;
-
-      pn.forEach((el, i) => {
-        const t = u - i;
-        el.style.setProperty("--t", (-t).toFixed(3));
-        el.style.setProperty("--f", (1 - Math.min(1, Math.abs(t))).toFixed(3));
-      });
-
-      px.style.left = `${p * 100}%`;
-      lv.style.setProperty("--p", String(p));
-      stp.forEach((s, i) => {
-        s.classList.toggle("on", u >= i - 0.01);
-      });
-      stg.style.setProperty("--lvc", fgColors[Math.round(u)] || "#f6fbf1");
-    };
-
     let ticking = false;
     let targetP = 0;
     let currentP = -1;
@@ -341,7 +332,6 @@ export default function Home() {
           loop();
         }
       }
-      horiz();
     };
 
     const onScroll = () => {
@@ -513,7 +503,7 @@ export default function Home() {
               Parallax is the way something appears to shift when you change where you stand. Every
               client sees their challenge from a different position. We begin by understanding yours.
             </p>
-            <p className="big l4">Start with the problem, not the service.</p>
+            <p className="big l4 cursive-italic">Start with the problem, not the service.</p>
           </div>
           <div className="hud">
             <span>
@@ -606,190 +596,42 @@ export default function Home() {
       </section>
 
       {/* 04 — WHAT WE DO */}
-      <section className="hz" id="services" ref={hzRef}>
-        <div className="stage" ref={stageRef}>
-          <div className="track" ref={trackRef}>
-            {/* Panel 1 */}
-            <div
-              className="pn p1"
-              ref={(el) => {
-                panelsRef.current[0] = el;
-              }}
-            >
-              <div className="pbg"></div>
-              <div className="pt">
-                <p className="eyebrow">04 — What we do</p>
-                <h3>Websites &amp; digital presence</h3>
-                <p>
-                  A useful digital asset, not just a page online. Business and portfolio sites,
-                  landing pages and redesigns, built responsive, accessible and fast.
-                </p>
-              </div>
-              <div className="pv">
-                <div className="bw">
-                  <div className="wb">
-                    <i></i>
-                    <i></i>
-                    <i></i>
-                  </div>
-                  <div className="bk" style={{ height: "96px" }}></div>
-                  <div className="rw2">
-                    <div className="bk" style={{ height: "64px" }}></div>
-                    <div className="bk" style={{ height: "64px" }}></div>
-                  </div>
-                  <div className="bk" style={{ height: "28px" }}></div>
-                </div>
-              </div>
-            </div>
+      <section className="sec services-sec" id="services">
+        <div className="w" style={{ textAlign: "center", marginBottom: "clamp(24px, 4vw, 44px)" }}>
+          <p className="eyebrow rv">04 — What we do</p>
+          <h2 className="rv" style={{ marginInline: "auto", maxWidth: "16ch" }}>
+            Capabilities shaped around your goals
+          </h2>
+          <p className="lead rv" style={{ marginInline: "auto" }}>
+            From high-performance websites to creative 3D motion and custom technical builds, explore our core areas of work.
+          </p>
+        </div>
 
-            {/* Panel 2 */}
-            <div
-              className="pn p2"
-              ref={(el) => {
-                panelsRef.current[1] = el;
-              }}
-            >
-              <div className="pbg"></div>
-              <div className="pt">
-                <p className="eyebrow">04 — What we do</p>
-                <h3>Creative experiences</h3>
-                <p>
-                  Design with a reason to exist. Scroll-based storytelling, motion, 3D and
-                  illustration, and art-directed brand pages.
-                </p>
-              </div>
-              <div className="pv">
-                <div className="cw">
-                  <b className="kw">MOTION</b>
-                  <div className="cube">
-                    <i></i>
-                    <i></i>
-                    <i></i>
-                    <i></i>
-                    <i></i>
-                    <i></i>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Panel 3 */}
-            <div
-              className="pn p3"
-              ref={(el) => {
-                panelsRef.current[2] = el;
-              }}
-            >
-              <div className="pbg"></div>
-              <div className="pt">
-                <p className="eyebrow">04 — What we do</p>
-                <h3>Technical build</h3>
-                <p>
-                  Creative ideas, reliably delivered. Right-fit technology, integrations and
-                  functionality, with performance and upkeep in mind.
-                </p>
-              </div>
-              <div className="pv">
-                <div className="ed">
-                  <p>const brief = listen(client);</p>
-                  <p>const plan = fit(brief, budget);</p>
-                  <p>const site = design(plan).build();</p>
-                  <p>test(site, &#123; fast: true &#125;);</p>
-                  <p>ship(site);</p>
-                  <div className="dp">
-                    <i></i>
-                  </div>
-                  <small>deploy</small>
-                </div>
-              </div>
-            </div>
-
-            {/* Panel 4 */}
-            <div
-              className="pn p4"
-              ref={(el) => {
-                panelsRef.current[3] = el;
-              }}
-            >
-              <div className="pbg"></div>
-              <div className="pt">
-                <p className="eyebrow">04 — What we do</p>
-                <h3>Shaped around you</h3>
-                <p>
-                  Understand first, then assemble the solution: design, content and automation,
-                  scoped by your goals, with support for the next stage.
-                </p>
-                <p className="note">
-                  Our capabilities grow with our clients. We’ll always tell you plainly what we can
-                  deliver today.
-                </p>
-              </div>
-              <div className="pv">
-                <div className="bq4">
-                  <i
-                    style={{
-                      "--x": "-140px",
-                      "--y": "-90px",
-                      "--r": "-24deg",
-                      background: "#7fdc9c",
-                    } as React.CSSProperties}
-                  ></i>
-                  <i
-                    style={{
-                      "--x": "150px",
-                      "--y": "-60px",
-                      "--r": "18deg",
-                      background: "#ffb27a",
-                    } as React.CSSProperties}
-                  ></i>
-                  <i
-                    style={{
-                      "--x": "-110px",
-                      "--y": "120px",
-                      "--r": "14deg",
-                      background: "#0c3b27",
-                    } as React.CSSProperties}
-                  ></i>
-                  <i
-                    style={{
-                      "--x": "130px",
-                      "--y": "100px",
-                      "--r": "-20deg",
-                      background: "#8f96ff",
-                    } as React.CSSProperties}
-                  ></i>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="lv" id="lv" ref={lvRef}>
-            <i
-              className="st on"
-              ref={(el) => {
-                stpRef.current[0] = el;
-              }}
-            ></i>
-            <i
-              className="st"
-              ref={(el) => {
-                stpRef.current[1] = el;
-              }}
-            ></i>
-            <i
-              className="st"
-              ref={(el) => {
-                stpRef.current[2] = el;
-              }}
-            ></i>
-            <i
-              className="st"
-              ref={(el) => {
-                stpRef.current[3] = el;
-              }}
-            ></i>
-            <i className="pix" id="px" ref={pxRef}></i>
-          </div>
+        {/* React Bits Pro Concave Carousel */}
+        <div className="concave-gallery-container rv">
+          <ConcaveCarousel
+            items={SERVICE_CAROUSEL_ITEMS}
+            aspect={1.25}
+            size={0.52}
+            curvature={0.88}
+            distance={3.6}
+            tilt={0.0}
+            gap={18}
+            radius={16}
+            dim={0.4}
+            reflection={0.08}
+            autoplay="drift"
+            speed={0.16}
+            interval={4.0}
+            snap={true}
+            inertia={0.5}
+            pauseOnHover={true}
+            draggable={true}
+            wheel={false}
+            captions={true}
+            controls={true}
+            ariaLabel="Parallax Machine Inc Services Gallery"
+          />
         </div>
       </section>
 
@@ -797,7 +639,7 @@ export default function Home() {
       <section className="vr v1" id="how" ref={howRef}>
         <div className="vs">
           <p className="eyebrow vl">05 — How we work</p>
-          <div className="pl" data-list>
+          <div className="how-list" data-list>
             {PRINCIPLES.map(([title, desc], i) => (
               <div key={i} className={`pi ${i === 0 ? "on" : ""}`}>
                 <span>0{i + 1}</span>

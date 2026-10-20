@@ -1,0 +1,5 @@
+{
+  "$schema": "https://json.schemastore.org/partial-hooks.json",
+  "description": "Lifecycle hooks for Parallax Machine Inc agent workflows",
+  "hooks": []
+}

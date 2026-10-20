@@ -1,0 +1,29 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 640' width='800' height='640'>
+  <defs>
+    <linearGradient id='bg3' x1='0%' y1='0%' x2='100%' y2='100%'>
+      <stop offset='0%' stop-color='#020b06'/>
+      <stop offset='60%' stop-color='#082515'/>
+      <stop offset='100%' stop-color='#020804'/>
+    </linearGradient>
+  </defs>
+  <rect width='100%' height='100%' fill='url(#bg3)'/>
+  <g transform='translate(100, 80)'>
+    <rect width='600' height='480' rx='14' fill='#030d07' stroke='rgba(127,220,156,0.4)' stroke-width='1.5'/>
+    <rect width='600' height='42' rx='14' fill='#061b0f'/>
+    <circle cx='28' cy='21' r='5' fill='#ff5f57'/>
+    <circle cx='46' cy='21' r='5' fill='#febc2e'/>
+    <circle cx='64' cy='21' r='5' fill='#28c840'/>
+    <text x='300' y='26' font-family='monospace' font-size='12' fill='rgba(127,220,156,0.85)' text-anchor='middle'>engine.ts — Next.js Turbopack</text>
+    <text x='40' y='86' font-family='monospace' font-size='14' fill='#ffb27a'>const <tspan fill='#f6fbf1'>architecture</tspan> = <tspan fill='#7fdc9c'>designSystem</tspan>();</text>
+    <text x='40' y='124' font-family='monospace' font-size='14' fill='#ffb27a'>const <tspan fill='#f6fbf1'>stack</tspan> = await <tspan fill='#7a82ff'>assemble</tspan>({</text>
+    <text x='64' y='162' font-family='monospace' font-size='14' fill='#7fdc9c'>framework: <tspan fill='#f6fbf1'>&apos;Next.js 16 App Router&apos;</tspan>,</text>
+    <text x='64' y='200' font-family='monospace' font-size='14' fill='#7fdc9c'>bundler: <tspan fill='#f6fbf1'>&apos;Turbopack&apos;</tspan>,</text>
+    <text x='64' y='238' font-family='monospace' font-size='14' fill='#7fdc9c'>runtime: <tspan fill='#f6fbf1'>&apos;Edge &amp; Node.js&apos;</tspan>,</text>
+    <text x='64' y='276' font-family='monospace' font-size='14' fill='#7fdc9c'>perf: <tspan fill='#f6fbf1'>&apos;100% Lighthouse&apos;</tspan></text>
+    <text x='40' y='314' font-family='monospace' font-size='14' fill='#ffb27a'>});</text>
+    <text x='40' y='360' font-family='monospace' font-size='14' fill='rgba(127,220,156,0.6)'>// Ready in 120ms ✓ Static optimized</text>
+    <rect x='40' y='400' width='520' height='8' rx='4' fill='rgba(127,220,156,0.15)'/>
+    <rect x='40' y='400' width='440' height='8' rx='4' fill='#7fdc9c'/>
+    <text x='40' y='438' font-family='monospace' font-size='11' fill='#7fdc9c' letter-spacing='2'>DEPLOY STATUS: LIVE 100% HEALTH</text>
+  </g>
+</svg>
