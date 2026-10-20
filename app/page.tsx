@@ -114,10 +114,8 @@ export default function Home() {
   const panelsRef = useRef<(HTMLDivElement | null)[]>([]);
   const stpRef = useRef<(HTMLElement | null)[]>([]);
 
-  // Section 05 (#how) Refs
-  const v1Ref = useRef<HTMLElement>(null);
-  const v2Ref = useRef<HTMLElement>(null);
-  const v3Ref = useRef<HTMLElement>(null);
+  // Section 05 (#how) Ref
+  const howRef = useRef<HTMLElement>(null);
 
   // Footer Watermark Refs
   const wmwRef = useRef<HTMLDivElement>(null);
@@ -372,10 +370,11 @@ export default function Home() {
       window.addEventListener("pointermove", onPointerMove);
     }
 
-    // 5. Section 05 (#how) 3-Option Scroll Controllers
-    const vrSections = [v1Ref.current, v2Ref.current, v3Ref.current].filter(Boolean) as HTMLElement[];
+    // 5. Section 05 (#how) Scroll Controller
+    const updateVR = () => {
+      const v = howRef.current as (HTMLElement & { _s?: number }) | null;
+      if (!v) return;
 
-    const updateVR = (v: HTMLElement & { _s?: number }) => {
       const m = v.offsetHeight - window.innerHeight;
       const p = Math.min(1, Math.max(0, -v.getBoundingClientRect().top / m));
       const u = p * 4;
@@ -391,21 +390,9 @@ export default function Home() {
         v.classList.toggle(`k${k}`, st >= k);
       }
 
-      v.querySelectorAll<HTMLElement>(".pi, .dt, .stn").forEach((el, i) => {
+      v.querySelectorAll<HTMLElement>(".pi").forEach((el, i) => {
         el.classList.toggle("on", i === st);
       });
-
-      const titleEl = v.querySelector<HTMLElement>(".ac-t");
-      const descEl = v.querySelector<HTMLElement>(".ac-d");
-      if (titleEl && descEl && PRINCIPLES[st]) {
-        titleEl.textContent = PRINCIPLES[st][0];
-        descEl.textContent = PRINCIPLES[st][1];
-      }
-
-      const styleEl = v.querySelector<HTMLElement>(".sty");
-      if (styleEl && PRINCIPLES[st]) {
-        styleEl.innerHTML = `<span class="c">/* ${PRINCIPLES[st][0]} */</span><br>.principle {<br>&nbsp;&nbsp;<i>content</i>: "${PRINCIPLES[st][1]}";<br>}`;
-      }
     };
 
     let vrTicking = false;
@@ -414,14 +401,14 @@ export default function Home() {
         vrTicking = true;
         requestAnimationFrame(() => {
           vrTicking = false;
-          vrSections.forEach((v) => updateVR(v));
+          updateVR();
         });
       }
     };
 
     window.addEventListener("scroll", onVRScroll, { passive: true });
     window.addEventListener("resize", onVRScroll);
-    vrSections.forEach((v) => updateVR(v));
+    updateVR();
 
     // 6. Watermark width fitting in Footer
     const fitWatermark = () => {
@@ -807,10 +794,9 @@ export default function Home() {
       </section>
 
       {/* 05 — HOW WE WORK */}
-      {/* Option 1: Wireframe to site */}
-      <section className="vr v1" id="how" ref={v1Ref}>
+      <section className="vr v1" id="how" ref={howRef}>
         <div className="vs">
-          <p className="eyebrow vl">05 — How we work · Option 1 · Wireframe to site</p>
+          <p className="eyebrow vl">05 — How we work</p>
           <div className="pl" data-list>
             {PRINCIPLES.map(([title, desc], i) => (
               <div key={i} className={`pi ${i === 0 ? "on" : ""}`}>
@@ -849,85 +835,6 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Option 2: Assembly line */}
-      <section className="vr v2" ref={v2Ref}>
-        <div className="vs col">
-          <p className="eyebrow vl">05 — How we work · Option 2 · Assembly line</p>
-          <div className="ac">
-            <h3 className="ac-t">{PRINCIPLES[0][0]}</h3>
-            <p className="ac-d">{PRINCIPLES[0][1]}</p>
-          </div>
-          <div className="belt">
-            <div className="stn on" style={{ "--c": 10 } as React.CSSProperties}>
-              <small>01</small>
-              <b>Scan</b>
-            </div>
-            <div className="stn" style={{ "--c": 30 } as React.CSSProperties}>
-              <small>02</small>
-              <b>Shape</b>
-            </div>
-            <div className="stn" style={{ "--c": 50 } as React.CSSProperties}>
-              <small>03</small>
-              <b>Label</b>
-            </div>
-            <div className="stn" style={{ "--c": 70 } as React.CSSProperties}>
-              <small>04</small>
-              <b>Finish</b>
-            </div>
-            <div className="stn" style={{ "--c": 90 } as React.CSSProperties}>
-              <small>05</small>
-              <b>Flex</b>
-            </div>
-            <div className="line"></div>
-            <div className="crate"></div>
-            <div className="out">→ Digital outcome</div>
-          </div>
-        </div>
-      </section>
-
-      {/* Option 3: Inspector */}
-      <section className="vr v3" ref={v3Ref}>
-        <div className="vs">
-          <p className="eyebrow vl">05 — How we work · Option 3 · Inspector</p>
-          <div className="pre">
-            <div className="pb">01 · Understand</div>
-            <div className="pb">02 · Choose</div>
-            <div className="pb">03 · Explain</div>
-            <div className="pb">04 · Deliver</div>
-            <div className="pb">05 · Adapt</div>
-            <div className="hl2"></div>
-          </div>
-          <div className="dev">
-            <div className="tabs">
-              <span>Elements</span>
-              <span>Console</span>
-              <span>Sources</span>
-            </div>
-            <div className="dt on" data-i="0">
-              &lt;section className=&quot;principle-01&quot;&gt;
-            </div>
-            <div className="dt" data-i="1">
-              &lt;section className=&quot;principle-02&quot;&gt;
-            </div>
-            <div className="dt" data-i="2">
-              &lt;section className=&quot;principle-03&quot;&gt;
-            </div>
-            <div className="dt" data-i="3">
-              &lt;section className=&quot;principle-04&quot;&gt;
-            </div>
-            <div className="dt" data-i="4">
-              &lt;section className=&quot;principle-05&quot;&gt;
-            </div>
-            <div
-              className="sty"
-              dangerouslySetInnerHTML={{
-                __html: `<span class="c">/* ${PRINCIPLES[0][0]} */</span><br>.principle {<br>&nbsp;&nbsp;<i>content</i>: "${PRINCIPLES[0][1]}";<br>}`,
-              }}
-            ></div>
           </div>
         </div>
       </section>
