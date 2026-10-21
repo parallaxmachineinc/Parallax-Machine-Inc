@@ -10,7 +10,7 @@ Welcome to the **Parallax Machine Inc** repository. This document outlines proje
 - **Styling**: Vanilla CSS in `app/globals.css`. Do not introduce CSS frameworks like Tailwind CSS unless explicitly requested by the user.
 - **Design Aesthetic**:
   - Palette: Deep forest green (`#0c3b27`, `#115238`), mint accent (`#7fdc9c`), cream ink (`#f6fbf1`), terracotta orange (`#ffb27a`), and periwinkle violet (`#7a82ff`).
-  - Typography: `Baserona` for display titles/headings, `Prevalent Sans Pro` / monospace for body, and `Caveat` / `Playfair Display` for cursive-italic emphasis statements.
+  - Typography: `Baserona` for display titles/headings, `Prevalent Sans Pro` / monospace for body, and `Instrument Serif` / `Caveat` / `Playfair Display` for cursive-italic emphasis statements.
   - Atmosphere: Premium tactile aesthetic with subtle grain textures, CRT glows, 3D spatial perspectives, and smooth 60fps micro-interactions.
 - **Browser Compatibility & Accessibility**:
   - Semantic HTML5 structure.

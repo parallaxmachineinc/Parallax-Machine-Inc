@@ -1,7 +1,16 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Lenis from "lenis";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import ConcaveCarousel, { ConcaveCarouselItem } from "@/components/ConcaveCarousel";
+import FounderProfileCard from "@/components/FounderProfileCard";
+import OrbitalVisual, { OrbitalVisualController } from "@/components/OrbitalVisual";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 const SERVICE_CAROUSEL_ITEMS: ConcaveCarouselItem[] = [
   {
@@ -69,28 +78,69 @@ const RADAR_ITEMS = [
   },
 ] as const;
 
-const PRINCIPLES = [
-  [
-    "Understand before building",
-    "Every project starts with your goals, audience and constraints.",
-  ],
-  [
-    "Choose the right solution",
-    "Design and technology follow from the problem, never the other way round.",
-  ],
-  [
-    "Make it understandable",
-    "You can follow the work and the important decisions along the way.",
-  ],
-  [
-    "Deliver meaningful outcomes",
-    "We judge a project by what it enables, not only how it looks.",
-  ],
-  [
-    "Remain adaptable",
-    "As you grow, we grow with you, at a consistent standard of work.",
-  ],
-] as const;
+export interface PrincipleItem {
+  number: string;
+  title: string;
+  desc: string;
+  tag: string;
+  deliverables: string[];
+  phaseName: string;
+  metric: string;
+  status: string;
+}
+
+export const HOW_PRINCIPLES: PrincipleItem[] = [
+  {
+    number: "01",
+    title: "Understand before building",
+    desc: "Every project starts with your goals, audience and constraints.",
+    tag: "DIAGNOSTIC AUDIT",
+    deliverables: ["Root-Cause Analysis", "Audience Alignment", "Constraint Audit"],
+    phaseName: "01 // DIAGNOSIS",
+    metric: "100% Scope Clarity",
+    status: "DISCOVERED",
+  },
+  {
+    number: "02",
+    title: "Choose the right solution",
+    desc: "Design and technology follow from the problem, never the other way round.",
+    tag: "ARCHITECTURE MATRIX",
+    deliverables: ["Right-Fit Tech Stack", "Modular Components", "Zero-Bloat Scope"],
+    phaseName: "02 // ARCHITECTURE",
+    metric: "0% Framework Bloat",
+    status: "SPECIFIED",
+  },
+  {
+    number: "03",
+    title: "Make it understandable",
+    desc: "You can follow the work and the important decisions along the way.",
+    tag: "TRANSPARENT SPRINT",
+    deliverables: ["Milestone Walkthroughs", "Working Prototypes", "Plain-English Decisions"],
+    phaseName: "03 // VERIFICATION",
+    metric: "100% Visibility",
+    status: "INSPECTED",
+  },
+  {
+    number: "04",
+    title: "Deliver meaningful outcomes",
+    desc: "We judge a project by what it enables, not only how it looks.",
+    tag: "PRODUCTION BUILD",
+    deliverables: ["Accessible HTML5", "Fluid 60fps Motion", "Sub-Second Load"],
+    phaseName: "04 // DELIVERY",
+    metric: "60fps Verified",
+    status: "DEPLOYED ✓",
+  },
+  {
+    number: "05",
+    title: "Remain adaptable",
+    desc: "As you grow, we grow with you, at a consistent standard of work.",
+    tag: "EVOLUTIONARY SCALE",
+    deliverables: ["Modular Components", "Continuous Support", "Future-Proof Core"],
+    phaseName: "05 // ADAPTATION",
+    metric: "Infinite Scalability",
+    status: "OPERATIONAL",
+  },
+];
 
 const TERMINAL_LINES = [
   { text: "> scan client.needs", className: "" },
@@ -114,6 +164,7 @@ interface DustParticle {
 
 export default function Home() {
   const [activeRadarKey, setActiveRadarKey] = useState<string>("0");
+  const [activeStep, setActiveStep] = useState<number>(0);
   const [dustParticles, setDustParticles] = useState<DustParticle[]>([]);
 
   // Section 01 (#idea) Refs
@@ -137,9 +188,65 @@ export default function Home() {
   // Section 02 (#why) Ref
   const tlRef = useRef<HTMLDivElement>(null);
 
+  // Zoom Portal Stage (Section 02 into Section 03) Refs
+  const zoomStageRef = useRef<HTMLDivElement>(null);
+  const zoomViewportRef = useRef<HTMLDivElement>(null);
+  const planetActorRef = useRef<HTMLDivElement>(null);
+  const targetSlotRef = useRef<HTMLDivElement>(null);
+  const nucleusLayerRef = useRef<HTMLDivElement>(null);
+  const whyInnerRef = useRef<HTMLDivElement>(null);
+  const orbitSecRef = useRef<HTMLElement>(null);
+  const orbitContentRef = useRef<HTMLDivElement>(null);
+  const orbitalCtrlRef = useRef<OrbitalVisualController | null>(null);
+  const updateTransitionRef = useRef<((p: number) => void) | null>(null);
+  const currentProgressRef = useRef<number>(0);
 
-  // Section 05 (#how) Ref
+  // Section 05 (#how) Refs & Handlers
   const howRef = useRef<HTMLElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const linePathRef = useRef<SVGPathElement>(null);
+  const lenisRef = useRef<Lenis | null>(null);
+  const cardTiltRef = useRef<HTMLDivElement>(null);
+  const currentActiveStepRef = useRef<number>(0);
+
+  const handleCardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const card = cardTiltRef.current;
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    gsap.to(card, {
+      rotateY: x * 6,
+      rotateX: -y * 6,
+      duration: 0.4,
+      ease: "power2.out",
+      transformPerspective: 1000,
+    });
+  };
+
+  const handleCardMouseLeave = () => {
+    const card = cardTiltRef.current;
+    if (!card) return;
+    gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.6, ease: "power2.out" });
+  };
+
+  const handleStepClick = (idx: number) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const steps = track.querySelectorAll<HTMLElement>(".how-step");
+    const el = steps[idx];
+    if (!el) return;
+    const offset = -window.innerHeight / 2 + el.offsetHeight / 2;
+    if (lenisRef.current) {
+      lenisRef.current.scrollTo(el, { offset, duration: 1.2 });
+    } else {
+      window.scrollTo({
+        top: window.scrollY + el.getBoundingClientRect().top + offset,
+        behavior: "smooth",
+      });
+    }
+  };
 
   // Footer Watermark Refs
   const wmwRef = useRef<HTMLDivElement>(null);
@@ -165,6 +272,26 @@ export default function Home() {
   useEffect(() => {
     document.documentElement.classList.add("js");
 
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let lenis: Lenis | null = null;
+    let tickerHandler: ((time: number) => void) | null = null;
+
+    if (!prefersReducedMotion) {
+      lenis = new Lenis({
+        lerp: 0.08,
+        smoothWheel: true,
+      });
+      lenisRef.current = lenis;
+
+      lenis.on("scroll", ScrollTrigger.update);
+
+      tickerHandler = (time: number) => {
+        lenis?.raf(time * 1000);
+      };
+      gsap.ticker.add(tickerHandler);
+      gsap.ticker.lagSmoothing(0);
+    }
+
     // 1. Intersection Observer for .rv reveal animations
     const rvObserver = new IntersectionObserver(
       (entries) => {
@@ -183,48 +310,61 @@ export default function Home() {
     // 2. Terminal typewriter in Section 02 (#why)
     const tl = tlRef.current;
     let terminalTimeoutIds: NodeJS.Timeout[] = [];
+    let triggerTerminalTyping: (() => void) | null = null;
     if (tl) {
       const pElements = Array.from(tl.children) as HTMLElement[];
       const texts = pElements.map((p) => p.textContent || "");
       const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion:reduce)").matches;
 
       if (!prefersReducedMotion) {
-        pElements.forEach((p) => {
-          p.textContent = "";
-        });
-
         let typed = false;
+        const startTyping = () => {
+          if (typed) return;
+          typed = true;
+
+          // Preserve meaningful terminal output until the animation has
+          // definitely begun. A pinned/sticky ScrollTrigger can otherwise
+          // miss its first enter callback and leave this panel permanently
+          // empty.
+          pElements.forEach((p) => {
+            p.textContent = "";
+            p.classList.remove("cur");
+          });
+
+          const typeLine = (lineIdx: number) => {
+            if (lineIdx >= pElements.length) return;
+            const p = pElements[lineIdx];
+            let charIdx = 0;
+            p.classList.add("cur");
+
+            const typeChar = () => {
+              charIdx++;
+              p.textContent = texts[lineIdx].slice(0, charIdx);
+              if (charIdx < texts[lineIdx].length) {
+                const tid = setTimeout(typeChar, 14);
+                terminalTimeoutIds.push(tid);
+              } else {
+                p.classList.remove("cur");
+                const tid = setTimeout(() => typeLine(lineIdx + 1), 260);
+                terminalTimeoutIds.push(tid);
+              }
+            };
+            typeChar();
+          };
+
+          typeLine(0);
+        };
+
+        triggerTerminalTyping = startTyping;
+
         const tlObserver = new IntersectionObserver(
           (entries, obs) => {
             if (entries[0].isIntersecting && !typed) {
-              typed = true;
               obs.disconnect();
-
-              const typeLine = (lineIdx: number) => {
-                if (lineIdx >= pElements.length) return;
-                const p = pElements[lineIdx];
-                let charIdx = 0;
-                p.classList.add("cur");
-
-                const typeChar = () => {
-                  charIdx++;
-                  p.textContent = texts[lineIdx].slice(0, charIdx);
-                  if (charIdx < texts[lineIdx].length) {
-                    const tid = setTimeout(typeChar, 14);
-                    terminalTimeoutIds.push(tid);
-                  } else {
-                    p.classList.remove("cur");
-                    const tid = setTimeout(() => typeLine(lineIdx + 1), 260);
-                    terminalTimeoutIds.push(tid);
-                  }
-                };
-                typeChar();
-              };
-
-              typeLine(0);
+              startTyping();
             }
           },
-          { threshold: 0.4 }
+          { threshold: 0.2 }
         );
 
         tlObserver.observe(tl);
@@ -360,45 +500,289 @@ export default function Home() {
       window.addEventListener("pointermove", onPointerMove);
     }
 
-    // 5. Section 05 (#how) Scroll Controller
-    const updateVR = () => {
-      const v = howRef.current as (HTMLElement & { _s?: number }) | null;
-      if (!v) return;
-
-      const m = v.offsetHeight - window.innerHeight;
-      const p = Math.min(1, Math.max(0, -v.getBoundingClientRect().top / m));
-      const u = p * 4;
-      const st = Math.round(u);
-
-      v.style.setProperty("--p", p.toFixed(4));
-      v.style.setProperty("--u", u.toFixed(3));
-
-      if (v._s === st) return;
-      v._s = st;
-
-      for (let k = 1; k < 5; k++) {
-        v.classList.toggle(`k${k}`, st >= k);
-      }
-
-      v.querySelectorAll<HTMLElement>(".pi").forEach((el, i) => {
-        el.classList.toggle("on", i === st);
-      });
-    };
-
-    let vrTicking = false;
-    const onVRScroll = () => {
-      if (!vrTicking) {
-        vrTicking = true;
-        requestAnimationFrame(() => {
-          vrTicking = false;
-          updateVR();
+    // 5. Section 05 (#how): scroll-drawn fluid line + centre-proximity step highlight
+    const linePath = linePathRef.current;
+    const track = trackRef.current;
+    if (linePath && track) {
+      const len = linePath.getTotalLength();
+      if (prefersReducedMotion) {
+        gsap.set(linePath, { strokeDasharray: len, strokeDashoffset: 0 });
+      } else {
+        gsap.set(linePath, { strokeDasharray: len, strokeDashoffset: len });
+        gsap.to(linePath, {
+          strokeDashoffset: 0,
+          ease: "none",
+          scrollTrigger: {
+            trigger: track,
+            start: "top 80%",
+            end: "bottom 10%",
+            scrub: 2,
+          },
         });
       }
-    };
 
-    window.addEventListener("scroll", onVRScroll, { passive: true });
-    window.addEventListener("resize", onVRScroll);
-    updateVR();
+      const stepEls = Array.from(track.querySelectorAll<HTMLElement>(".how-step"));
+      const pickCenterStep = () => {
+        const cy = window.innerHeight / 2;
+        let best = 0;
+        let bestDist = Infinity;
+        stepEls.forEach((el, i) => {
+          const r = el.getBoundingClientRect();
+          const d = Math.abs(r.top + r.height / 2 - cy);
+          if (d < bestDist) {
+            bestDist = d;
+            best = i;
+          }
+        });
+        if (best !== currentActiveStepRef.current) {
+          currentActiveStepRef.current = best;
+          setActiveStep(best);
+        }
+      };
+      ScrollTrigger.create({
+        trigger: track,
+        start: "top bottom",
+        end: "bottom top",
+        onUpdate: pickCenterStep,
+        onRefresh: pickCenterStep,
+      });
+    }
+    const refreshTriggers = () => ScrollTrigger.refresh();
+    window.addEventListener("resize", refreshTriggers);
+
+    // 5.5 Zoom Portal Stage: Planet Zoom-Out & Converging Circles Transition
+    let measureZoomTargets: (() => void) | null = null;
+    let zoomTrigger: ScrollTrigger | null = null;
+
+    if (
+      !prefersReducedMotion &&
+      zoomStageRef.current &&
+      planetActorRef.current &&
+      targetSlotRef.current &&
+      nucleusLayerRef.current &&
+      whyInnerRef.current
+    ) {
+      const zoomStage = zoomStageRef.current;
+      const planetActor = planetActorRef.current;
+      const targetSlot = targetSlotRef.current;
+      const nucleusLayer = nucleusLayerRef.current;
+      const whyInner = whyInnerRef.current;
+      const orbitSec = orbitSecRef.current;
+      const orbitContent = orbitContentRef.current;
+
+      let startX = window.innerWidth / 2;
+      let startY = window.innerHeight / 2;
+      let targetX = startX;
+      let targetY = startY;
+      let actorW = 460;
+      let actorH = 460;
+      let startCircleScale = 1;
+
+      measureZoomTargets = () => {
+        const viewportEl = zoomViewportRef.current;
+        const vpW = viewportEl ? viewportEl.clientWidth : window.innerWidth;
+        const vpH = viewportEl ? viewportEl.clientHeight : window.innerHeight;
+
+        actorW = planetActor.offsetWidth || 460;
+        actorH = planetActor.offsetHeight || 460;
+
+        startX = vpW / 2;
+        startY = vpH / 2;
+        // Keep the outer ring just beyond the viewport diagonal at rest. The
+        // previous multiplier made the SVG 3–4 times larger than necessary,
+        // which forced the browser to repeatedly composite a very large layer.
+        // This still reads as a huge off-screen planet, but only asks the SVG
+        // renderer to cover the pixels that can actually become visible.
+        startCircleScale = Math.max(
+          3.2,
+          Math.hypot(vpW, vpH) / (Math.min(actorW, actorH) * 0.84) + 0.25
+        );
+
+        if (viewportEl && targetSlot) {
+          const viewportRect = viewportEl.getBoundingClientRect();
+          const slotRect = targetSlot.getBoundingClientRect();
+          if (slotRect.width > 0) {
+            // Local coordinates relative to sticky viewport container
+            targetX = slotRect.left - viewportRect.left + slotRect.width / 2;
+            targetY = slotRect.top - viewportRect.top + slotRect.height / 2;
+          } else {
+            targetX = vpW > 820 ? vpW * 0.72 : vpW * 0.5;
+            targetY = vpH * 0.5;
+          }
+        } else {
+          targetX = vpW > 820 ? vpW * 0.72 : vpW * 0.5;
+          targetY = vpH * 0.5;
+        }
+      };
+
+      measureZoomTargets();
+      window.addEventListener("resize", measureZoomTargets);
+
+      // Make inner reveal elements visible within zoom stage
+      whyInner.querySelectorAll(".rv").forEach((el) => el.classList.add("in"));
+      orbitSecRef.current?.querySelectorAll(".rv").forEach((el) => el.classList.add("in"));
+
+      const updateZoomTransition = (p: number) => {
+        currentProgressRef.current = p;
+
+        if (p <= 0.20) {
+          // =========================================================================
+          // PHASE 1: Section 02 is the quiet opening (p: 0 -> 0.20)
+          // =========================================================================
+          // Start with only the section copy and terminal visible. The planet
+          // enters only after the visitor begins scrolling.
+          whyInner.style.transform = "none";
+          whyInner.style.opacity = "1";
+          nucleusLayer.style.pointerEvents = "auto";
+
+          // Keep the expensive SVG out of the paint tree while it is entirely
+          // outside the viewport. It becomes visible as the pull-back starts.
+          planetActor.style.opacity = "0";
+          planetActor.style.visibility = "hidden";
+          planetActor.style.pointerEvents = "none";
+          planetActor.dataset.zoomPhase = "pullback";
+          planetActor.dataset.zoomVisible = "false";
+          planetActor.style.transform = `translate3d(${(startX - actorW / 2).toFixed(1)}px, ${(startY - actorH / 2).toFixed(1)}px, 0) scale(${startCircleScale.toFixed(3)})`;
+
+          if (orbitSec) orbitSec.style.pointerEvents = "none";
+          if (orbitContent) {
+            orbitContent.style.opacity = "0";
+            orbitContent.style.transform = "translate3d(-32px, 0, 0)";
+          }
+          if (orbitalCtrlRef.current) {
+            orbitalCtrlRef.current.goToFrame(60);
+            orbitalCtrlRef.current.rotateHalo(0);
+          }
+        } else if (p > 0.20 && p < 0.55) {
+          // =========================================================================
+          // PHASE 2: Section 02 Shrinks & Circle Scales Down Concurrently (p: 0.20 -> 0.55)
+          // =========================================================================
+          // The orbit scales in from outside the viewport while the terminal
+          // reduces into the same centre point. The Lottie remains on its
+          // opening frame until Section 02 has cleared.
+          const t2 = (p - 0.20) / (0.55 - 0.20);
+          const pullBack = t2 * (2 - t2);
+
+          const circleScale = lerp(startCircleScale, 1.0, pullBack);
+
+          // Follow the same pull-back curve, ending at a size that fits the
+          // Lottie inner circle before the terminal fades away.
+          const sec2Scale = lerp(1, 0.26, pullBack);
+          whyInner.style.transform = `scale(${sec2Scale.toFixed(3)})`;
+
+          planetActor.style.opacity = "1";
+          planetActor.style.visibility = "visible";
+          planetActor.style.pointerEvents = "none";
+          planetActor.dataset.zoomPhase = "pullback";
+          planetActor.dataset.zoomVisible = "true";
+          planetActor.style.transform = `translate3d(${(startX - actorW / 2).toFixed(1)}px, ${(startY - actorH / 2).toFixed(1)}px, 0) scale(${circleScale.toFixed(3)})`;
+
+          // Section 02 fades away normally once it has shrunk into the circle:
+          const sec2Opacity = t2 < 0.65 ? 1 : clamp(1 - (t2 - 0.65) / 0.30);
+          whyInner.style.opacity = sec2Opacity.toFixed(3);
+          nucleusLayer.style.pointerEvents = t2 > 0.8 ? "none" : "auto";
+
+          // Keep the inner circle stable around the terminal during the pull-
+          // back. Its internal convergence starts only in the next phase.
+          if (orbitalCtrlRef.current) {
+            orbitalCtrlRef.current.goToFrame(60);
+            orbitalCtrlRef.current.rotateHalo(0);
+          }
+
+          if (orbitSec) orbitSec.style.pointerEvents = "none";
+          if (orbitContent) {
+            orbitContent.style.opacity = "0";
+            orbitContent.style.transform = "translate3d(-32px, 0, 0)";
+          }
+        } else if (p >= 0.55 && p < 0.90) {
+          // =========================================================================
+          // PHASE 3: Section 03 Shows Up & Circle Slowly Gets Animated (p: 0.55 -> 0.90)
+          // =========================================================================
+          // Section 02 has faded away.
+          // Circle glides from center to Section 03's docking position.
+          // Concurrently, the circle animation (two robot circles converging) slowly gets animated!
+          // Section 03 loads and shows up.
+          const t3 = (p - 0.55) / (0.90 - 0.55);
+          const ease3 = t3 < 0.5 ? 2 * t3 * t3 : -1 + (4 - 2 * t3) * t3;
+
+          whyInner.style.opacity = "0";
+          nucleusLayer.style.pointerEvents = "none";
+
+          // Circle glides to Section 3's docked slot:
+          const currentX = lerp(startX, targetX, ease3);
+          const currentY = lerp(startY, targetY, ease3);
+          planetActor.style.opacity = "1";
+          planetActor.style.visibility = "visible";
+          planetActor.dataset.zoomPhase = "dock";
+          planetActor.dataset.zoomVisible = "true";
+          planetActor.style.transform = `translate3d(${(currentX - actorW / 2).toFixed(1)}px, ${(currentY - actorH / 2).toFixed(1)}px, 0) scale(1)`;
+
+          // Now that Section 02 has cleared, perform the Lottie's own
+          // convergence and dock the planet into Section 03.
+          const frame = lerp(60, 110, t3);
+          const haloDeg = lerp(0, 180, t3);
+          if (orbitalCtrlRef.current) {
+            orbitalCtrlRef.current.goToFrame(frame);
+            orbitalCtrlRef.current.rotateHalo(haloDeg);
+          }
+
+          // Section 03 loads and shows up:
+          const sec3In = clamp(t3 / 0.70);
+          const sec3Ease = sec3In * (2 - sec3In);
+          if (orbitContent) {
+            orbitContent.style.opacity = sec3Ease.toFixed(3);
+            orbitContent.style.transform = `translate3d(${(-32 * (1 - sec3Ease)).toFixed(1)}px, 0, 0)`;
+          }
+          if (orbitSec) orbitSec.style.pointerEvents = t3 > 0.75 ? "auto" : "none";
+        } else {
+          // =========================================================================
+          // PHASE 4: Section 03 Resting State & Fully Interactive (p >= 0.90)
+          // =========================================================================
+          whyInner.style.opacity = "0";
+          nucleusLayer.style.pointerEvents = "none";
+
+          planetActor.style.opacity = "1";
+          planetActor.style.visibility = "visible";
+          planetActor.dataset.zoomPhase = "dock";
+          planetActor.dataset.zoomVisible = "true";
+          planetActor.style.transform = `translate3d(${(targetX - actorW / 2).toFixed(1)}px, ${(targetY - actorH / 2).toFixed(1)}px, 0) scale(1)`;
+
+          if (orbitSec) orbitSec.style.pointerEvents = "auto";
+          if (orbitContent) {
+            orbitContent.style.opacity = "1";
+            orbitContent.style.transform = "none";
+          }
+          if (orbitalCtrlRef.current) {
+            orbitalCtrlRef.current.goToFrame(110);
+            orbitalCtrlRef.current.rotateHalo(180);
+          }
+        }
+      };
+
+      updateTransitionRef.current = updateZoomTransition;
+      updateZoomTransition(0);
+
+      zoomTrigger = ScrollTrigger.create({
+        trigger: zoomStage,
+        start: "top top",
+        end: "bottom bottom",
+        // A slightly longer version of the lower fluid-line scrub keeps the
+        // planetary pull-back especially calm and continuous.
+        scrub: 2.6,
+        onUpdate: (self) => {
+          updateZoomTransition(self.progress);
+        },
+        onRefresh: () => {
+          measureZoomTargets?.();
+        },
+        onEnter: () => {
+          triggerTerminalTyping?.();
+        },
+        onEnterBack: () => {
+          triggerTerminalTyping?.();
+        },
+      });
+    }
 
     // 6. Watermark width fitting in Footer
     const fitWatermark = () => {
@@ -425,9 +809,14 @@ export default function Home() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", updateAll);
       window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("scroll", onVRScroll);
-      window.removeEventListener("resize", onVRScroll);
+      window.removeEventListener("resize", refreshTriggers);
+      if (measureZoomTargets) window.removeEventListener("resize", measureZoomTargets);
+      if (zoomTrigger) zoomTrigger.kill();
+
       window.removeEventListener("resize", fitWatermark);
+      if (tickerHandler) gsap.ticker.remove(tickerHandler);
+      if (lenis) lenis.destroy();
+      ScrollTrigger.getAll().forEach((t) => t.kill());
       if (rafId) cancelAnimationFrame(rafId);
     };
   }, [dustParticles]);
@@ -503,7 +892,7 @@ export default function Home() {
               Parallax is the way something appears to shift when you change where you stand. Every
               client sees their challenge from a different position. We begin by understanding yours.
             </p>
-            <p className="big l4 cursive-italic">Start with the problem, not the service.</p>
+            <p className="big l4 instrument-serif cursive-italic">Start with the problem, not the service.</p>
           </div>
           <div className="hud">
             <span>
@@ -519,81 +908,92 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 02 — WHY WE EXIST */}
-      <section className="sec d2" id="why">
-        <div className="w">
-          <p className="eyebrow rv">02 — Why we exist</p>
-          <h2 className="rv">Going digital shouldn’t need a translator.</h2>
-          <p className="lead rv">
-            The gap is rarely a lack of interest. It’s the difficulty of turning a business need into
-            something that works online.
-          </p>
-          <div className="term rv">
-            <div className="tb">
-              <i></i>
-              <i></i>
-              <i></i>
-              <span>client.exe</span>
-            </div>
-            <div className="tl" id="tl" ref={tlRef}>
-              {TERMINAL_LINES.map((line, i) => (
-                <p key={i} className={line.className}>
-                  {line.text}
+      {/* 02 & 03 — SCROLL-CRAFT IRIS ZOOM STAGE */}
+      <div id="zoom-stage" ref={zoomStageRef} className="zoom-portal-stage">
+        <div className="zoom-portal-viewport" ref={zoomViewportRef}>
+          {/* Section 03: The Macro Universe (revealed as camera zooms out) */}
+          <section className="sec d1 zoom-macro-layer" id="orbit" ref={orbitSecRef}>
+            <div className="w rw">
+              <div className="orbit-content-col" ref={orbitContentRef}>
+                <p className="eyebrow rv" id="orbit-eyebrow">03 — The centre</p>
+                <h2 className="rv">
+                  One centre. Many <span id="orbit-directions">directions.</span>
+                </h2>
+                <p className="lead rv">
+                  Clients arrive from different starting points. We stay the point of connection between
+                  where you are and where you want to be.
                 </p>
-              ))}
+                <div id="rl">
+                  {RADAR_ITEMS.map((item) => (
+                    <button
+                      key={item.key}
+                      className={`rb ${activeRadarKey === item.key ? "on" : ""}`}
+                      data-k={item.key}
+                      style={{ "--c": item.color } as React.CSSProperties}
+                      onClick={() => setActiveRadarKey(item.key)}
+                      onMouseEnter={() => setActiveRadarKey(item.key)}
+                      onFocus={() => setActiveRadarKey(item.key)}
+                    >
+                      <b>{item.title}</b>
+                      <span>{item.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="orbit-visual-col" id="orbit-visual-col">
+                {/* Visual slot placeholder in the Section 3 grid where the planet docks */}
+                <div className="orbit-visual-slot" ref={targetSlotRef} aria-hidden="true" />
+              </div>
             </div>
-          </div>
-        </div>
-      </section>
+          </section>
 
-      {/* 03 — THE CENTRE */}
-      <section className="sec d1" id="orbit">
-        <div className="w rw">
-          <div>
-            <p className="eyebrow rv">03 — The centre</p>
-            <h2 className="rv">One centre. Many directions.</h2>
-            <p className="lead rv">
-              Clients arrive from different starting points. We stay the point of connection between
-              where you are and where you want to be.
-            </p>
-            <div id="rl">
-              {RADAR_ITEMS.map((item) => (
-                <button
-                  key={item.key}
-                  className={`rb ${activeRadarKey === item.key ? "on" : ""}`}
-                  data-k={item.key}
-                  style={{ "--c": item.color } as React.CSSProperties}
-                  onClick={() => setActiveRadarKey(item.key)}
-                  onMouseEnter={() => setActiveRadarKey(item.key)}
-                  onFocus={() => setActiveRadarKey(item.key)}
-                >
-                  <b>{item.title}</b>
-                  <span>{item.desc}</span>
-                </button>
-              ))}
-            </div>
+          {/* The Moving & Converging Planet Actor (starts centered, zooms out, docks into slot) */}
+          <div className="zoom-planet-actor" ref={planetActorRef} id="rd">
+            <OrbitalVisual
+              activeKey={activeRadarKey}
+              activeColor={RADAR_ITEMS.find((item) => item.key === activeRadarKey)?.color || "#7fdc9c"}
+              onControllerReady={(ctrl) => {
+                orbitalCtrlRef.current = ctrl;
+                if (updateTransitionRef.current) {
+                  updateTransitionRef.current(currentProgressRef.current);
+                } else {
+                  ctrl.goToFrame(60);
+                  ctrl.rotateHalo(0);
+                }
+              }}
+            />
           </div>
-          <div className="radar" id="rd">
-            <div className="sweep"></div>
-            {RADAR_ITEMS.map((item) => (
-              <button
-                key={item.key}
-                className={`blip ${activeRadarKey === item.key ? "on" : ""}`}
-                data-k={item.key}
-                aria-label={item.title}
-                style={{
-                  "--c": item.color,
-                  left: item.left,
-                  top: item.top,
-                } as React.CSSProperties}
-                onClick={() => setActiveRadarKey(item.key)}
-                onMouseEnter={() => setActiveRadarKey(item.key)}
-                onFocus={() => setActiveRadarKey(item.key)}
-              ></button>
-            ))}
+
+          {/* Section 02: Nucleus Layer (starts inside the planet in the middle) */}
+          <div className="zoom-nucleus-layer" ref={nucleusLayerRef}>
+            <section className="sec d2" id="why" style={{ background: "transparent", width: "100%" }}>
+              <div className="w zoom-why-inner" ref={whyInnerRef}>
+                <p className="eyebrow rv">02 — Why we exist</p>
+                <h2 className="rv">Going digital shouldn’t need a translator.</h2>
+                <p className="lead rv">
+                  The gap is rarely a lack of interest. It’s the difficulty of turning a business need into
+                  something that works online.
+                </p>
+                <div className="term rv">
+                  <div className="tb">
+                    <i></i>
+                    <i></i>
+                    <i></i>
+                    <span>client.exe</span>
+                  </div>
+                  <div className="tl" id="tl" ref={tlRef}>
+                    {TERMINAL_LINES.map((line, i) => (
+                      <p key={i} className={line.className}>
+                        {line.text}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* 04 — WHAT WE DO */}
       <section className="sec services-sec" id="services">
@@ -636,44 +1036,84 @@ export default function Home() {
       </section>
 
       {/* 05 — HOW WE WORK */}
-      <section className="vr v1" id="how" ref={howRef}>
-        <div className="vs">
-          <p className="eyebrow vl">05 — How we work</p>
-          <div className="how-list" data-list>
-            {PRINCIPLES.map(([title, desc], i) => (
-              <div key={i} className={`pi ${i === 0 ? "on" : ""}`}>
-                <span>0{i + 1}</span>
-                <b>{title}</b>
-                <em>{desc}</em>
-              </div>
-            ))}
-          </div>
-          <div className="wrap">
-            <div className="win">
-              <div className="wb">
-                <i></i>
-                <i></i>
-                <i></i>
-              </div>
-              <div className="wbody">
-                <div className="blk nav">
-                  <span className="tx">Parallax</span>
-                  <span className="tx">Work · Contact</span>
-                </div>
-                <div className="blk hero">
-                  <span className="tx">Start wherever you are.</span>
-                </div>
-                <div className="row3">
-                  <div className="blk"></div>
-                  <div className="blk"></div>
-                  <div className="blk"></div>
-                </div>
-                <div className="chart">
-                  <i style={{ height: "30%" }}></i>
-                  <i style={{ height: "55%" }}></i>
-                  <i style={{ height: "42%" }}></i>
-                  <i style={{ height: "80%" }}></i>
-                  <i style={{ height: "100%" }}></i>
+      <section className="how-section" id="how" ref={howRef}>
+        <div className="how-header w">
+          <p className="eyebrow rv">05 — How we work</p>
+          <h2 className="how-title rv">A disciplined path from problem to outcome.</h2>
+          <p className="lead how-lead rv">
+            Every engagement follows the same honest sequence. No guesswork, no hidden mechanics,
+            just clear steps from diagnosis to a delivered build.
+          </p>
+        </div>
+
+        <div className="how-track" ref={trackRef}>
+          <div className="how-flow">
+            {/* Scroll-drawn fluid line, painted behind the type and starting off the top-left edge of the screen */}
+            <svg
+              className="how-line-svg"
+              viewBox="0 0 1400 1600"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <path
+                ref={linePathRef}
+                className="how-line"
+                d="M -80,0 C 380,-20 740,140 640,360 C 520,600 40,620 300,920 C 560,1200 880,1140 960,1360 C 1040,1580 720,1660 540,1740 C 420,1800 780,1880 1480,1860"
+              />
+            </svg>
+
+            <div className="how-stage">
+              <ol className="how-steps">
+                {HOW_PRINCIPLES.map((p, i) => (
+                  <li key={p.number}>
+                    <button
+                      type="button"
+                      className={`how-step ${activeStep === i ? "on" : ""}`}
+                      onClick={() => handleStepClick(i)}
+                      aria-current={activeStep === i ? "step" : undefined}
+                    >
+                      <span className="how-step-num">{p.number}</span>
+                      <span className="how-step-title">{p.title}</span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+
+              <div className="how-detail-col">
+                <div className="how-detail-sticky">
+                  <div
+                    className="how-detail"
+                    ref={cardTiltRef}
+                    onMouseMove={handleCardMouseMove}
+                    onMouseLeave={handleCardMouseLeave}
+                  >
+                    <div className="how-detail-meta">
+                      <span>{HOW_PRINCIPLES[activeStep].phaseName}</span>
+                      <span>{HOW_PRINCIPLES[activeStep].number} / 0{HOW_PRINCIPLES.length}</span>
+                    </div>
+                    <div key={activeStep} className="how-detail-body">
+                      <p className="how-detail-tag">{HOW_PRINCIPLES[activeStep].tag}</p>
+                      <p className="how-detail-desc" aria-label={HOW_PRINCIPLES[activeStep].desc}>
+                        {HOW_PRINCIPLES[activeStep].desc.split(" ").map((word, wIdx) => (
+                          <span
+                            key={`${activeStep}-${wIdx}`}
+                            className="how-word"
+                            style={{ "--w-idx": wIdx } as React.CSSProperties}
+                          >
+                            {word}
+                          </span>
+                        ))}
+                      </p>
+                      <ul className="how-detail-list">
+                        {HOW_PRINCIPLES[activeStep].deliverables.map((d, dIdx) => (
+                          <li key={d} style={{ "--li-idx": dIdx } as React.CSSProperties}>
+                            {d}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <p className="how-detail-foot">{HOW_PRINCIPLES[activeStep].metric}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -700,6 +1140,16 @@ export default function Home() {
         </div>
         <div className="blob b1"></div>
         <div className="blob b2"></div>
+      </section>
+
+      <section className="founder-section" id="founder">
+        <div className="founder-copy">
+          <p className="eyebrow rv">Founder</p>
+          <h2 className="founder-title rv">The person behind the systems.</h2>
+          <p className="founder-lead rv">Christopher Mathai is an AI engineer building useful digital systems with clarity, care, and a bias toward work that holds up beyond launch day.</p>
+          <a className="founder-portfolio-link rv" href="https://christophermathai.vercel.app/" target="_blank" rel="noreferrer">Visit Christopher&apos;s portfolio <span aria-hidden="true">↗</span></a>
+        </div>
+        <FounderProfileCard name="Christopher Mathai" role="AI Engineer" href="https://christophermathai.vercel.app/" />
       </section>
 
       {/* FOOTER */}
