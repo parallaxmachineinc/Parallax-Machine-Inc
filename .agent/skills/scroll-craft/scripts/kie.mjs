@@ -38,6 +38,7 @@ function findEnv(start) {
   for (let i = 0; i < 8; i++) {
     const p = path.join(dir, ".env");
     if (fs.existsSync(p)) return p;
+    if (fs.existsSync(path.join(dir, ".git"))) break;
     const up = path.dirname(dir);
     if (up === dir) break;
     dir = up;

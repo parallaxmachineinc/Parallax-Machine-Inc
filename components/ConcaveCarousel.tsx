@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, {
@@ -81,7 +82,6 @@ export const ConcaveCarousel = forwardRef<ConcaveCarouselRef, ConcaveCarouselPro
       controls = true,
       backgroundColor = "transparent",
       paused = false,
-      dpr = 2,
       ariaLabel = "Concave carousel",
       className = "",
       style,
@@ -91,7 +91,6 @@ export const ConcaveCarousel = forwardRef<ConcaveCarouselRef, ConcaveCarouselPro
     ref
   ) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const [containerWidth, setContainerWidth] = useState<number>(1000);
     const [containerHeight, setContainerHeight] = useState<number>(540);
     const [activeIndex, setActiveIndex] = useState<number>(startIndex);
     const [isHovered, setIsHovered] = useState<boolean>(false);
@@ -168,8 +167,7 @@ export const ConcaveCarousel = forwardRef<ConcaveCarouselRef, ConcaveCarouselPro
 
       const ro = new ResizeObserver((entries) => {
         for (const entry of entries) {
-          const { width, height } = entry.contentRect;
-          if (width > 0) setContainerWidth(width);
+          const { height } = entry.contentRect;
           if (height > 0) setContainerHeight(height);
         }
       });
@@ -197,7 +195,7 @@ export const ConcaveCarousel = forwardRef<ConcaveCarouselRef, ConcaveCarouselPro
     }, [autoplay, paused, isHovered, pauseOnHover, interval, itemCount]);
 
     // Main animation loop
-    const [renderTick, setRenderTick] = useState<number>(0);
+    const [, setRenderTick] = useState<number>(0);
 
     useEffect(() => {
       let isMounted = true;
@@ -476,7 +474,14 @@ export const ConcaveCarousel = forwardRef<ConcaveCarouselRef, ConcaveCarouselPro
                   } else {
                     if (onSelect) onSelect(item, index);
                     if (item.href) {
-                      window.location.href = item.href;
+                      try {
+                        const parsed = new URL(item.href, window.location.origin);
+                        if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+                          window.location.href = parsed.href;
+                        }
+                      } catch {
+                        // Ignore malformed URLs
+                      }
                     }
                   }
                 }}

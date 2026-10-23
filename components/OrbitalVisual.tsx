@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import type { AnimationItem } from "lottie-web";
 import animationData from "@/data/see-think-act.json";
 
 export interface OrbitalVisualController {
@@ -19,10 +20,14 @@ interface OrbitalVisualProps {
 export default function OrbitalVisual({ activeKey, activeColor, onControllerReady }: OrbitalVisualProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const haloRef = useRef<SVGSVGElement>(null);
-  const animRef = useRef<any>(null);
+  const animRef = useRef<AnimationItem | null>(null);
+  const onControllerReadyRef = useRef(onControllerReady);
+  useEffect(() => {
+    onControllerReadyRef.current = onControllerReady;
+  }, [onControllerReady]);
 
   useEffect(() => {
-    let animInstance: any = null;
+    let animInstance: AnimationItem | null = null;
     let animTween: gsap.core.Tween | null = null;
     let haloTween: gsap.core.Tween | null = null;
     let isMounted = true;
@@ -57,8 +62,8 @@ export default function OrbitalVisual({ activeKey, activeColor, onControllerRead
         animInstance.goToAndStop(startFrame, true);
         lastFrame = startFrame;
 
-        if (onControllerReady) {
-          onControllerReady({
+        if (onControllerReadyRef.current) {
+          onControllerReadyRef.current({
             goToFrame: (frame: number) => {
               const roundedFrame = Math.round(frame);
               if (animInstance && roundedFrame !== lastFrame) {

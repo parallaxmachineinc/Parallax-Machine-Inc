@@ -1,6 +1,8 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+
 import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -162,10 +164,22 @@ interface DustParticle {
   opacity: number;
 }
 
+const DUST_PARTICLES: DustParticle[] = Array.from({ length: 30 }, (_, i) => {
+  const k = [0.25, 0.6, 1][i % 3];
+  const left = ((i * 37 + 13) % 97) + ((i * 7) % 3) * 0.5;
+  const top = ((i * 53 + 29) % 79) + ((i * 5) % 3) * 0.3;
+  return {
+    left,
+    top,
+    k,
+    size: 1.5 + k * 3,
+    opacity: 0.25 + k * 0.4,
+  };
+});
+
 export default function Home() {
   const [activeRadarKey, setActiveRadarKey] = useState<string>("0");
   const [activeStep, setActiveStep] = useState<number>(0);
-  const [dustParticles, setDustParticles] = useState<DustParticle[]>([]);
 
   // Section 01 (#idea) Refs
   const camRef = useRef<HTMLElement>(null);
@@ -252,22 +266,6 @@ export default function Home() {
   const wmwRef = useRef<HTMLDivElement>(null);
   const wmRef = useRef<HTMLSpanElement>(null);
 
-  // Generate dust particles on client mount
-  useEffect(() => {
-    const list: DustParticle[] = [];
-    for (let i = 0; i < 30; i++) {
-      const k = [0.25, 0.6, 1][i % 3];
-      list.push({
-        left: Math.random() * 100,
-        top: Math.random() * 80,
-        k,
-        size: 1.5 + k * 3,
-        opacity: 0.25 + k * 0.4,
-      });
-    }
-    setDustParticles(list);
-  }, []);
-
   // Main scroll & interaction logic
   useEffect(() => {
     document.documentElement.classList.add("js");
@@ -309,7 +307,8 @@ export default function Home() {
 
     // 2. Terminal typewriter in Section 02 (#why)
     const tl = tlRef.current;
-    let terminalTimeoutIds: NodeJS.Timeout[] = [];
+    const terminalTimeoutIds: NodeJS.Timeout[] = [];
+    let tlObserver: IntersectionObserver | null = null;
     let triggerTerminalTyping: (() => void) | null = null;
     if (tl) {
       const pElements = Array.from(tl.children) as HTMLElement[];
@@ -357,7 +356,7 @@ export default function Home() {
 
         triggerTerminalTyping = startTyping;
 
-        const tlObserver = new IntersectionObserver(
+        tlObserver = new IntersectionObserver(
           (entries, obs) => {
             if (entries[0].isIntersecting && !typed) {
               obs.disconnect();
@@ -417,7 +416,7 @@ export default function Home() {
 
       dustElementsRef.current.forEach((el, i) => {
         if (!el) return;
-        const k = dustParticles[i]?.k ?? 0.6;
+        const k = DUST_PARTICLES[i]?.k ?? 0.6;
         el.style.transform = `translate3d(${lerp(k * 0.5 * W, -k * 0.5 * W, p)}px, ${-p * k * 60}px, 0)`;
       });
 
@@ -805,6 +804,7 @@ export default function Home() {
     // Cleanup
     return () => {
       rvObserver.disconnect();
+      tlObserver?.disconnect();
       terminalTimeoutIds.forEach((tid) => clearTimeout(tid));
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", updateAll);
@@ -819,7 +819,7 @@ export default function Home() {
       ScrollTrigger.getAll().forEach((t) => t.kill());
       if (rafId) cancelAnimationFrame(rafId);
     };
-  }, [dustParticles]);
+  }, []);
 
   return (
     <>
@@ -837,8 +837,8 @@ export default function Home() {
         </div>
         <div className="tvwrap">
           <img
-            alt="Retro CRT television with a glowing blue screen"
-            src="/retro-tv.webp"
+            alt="Retro CRT television with glowing Russian collage"
+            src="/Retro%20CRT%20TV%20with%20Glowing%20Russian%20Collage.png"
           />
         </div>
         <div className="blob b1"></div>
@@ -861,7 +861,7 @@ export default function Home() {
           <div className="hl h4 layer" ref={h4Ref} style={{ "--d": 70 } as React.CSSProperties}></div>
 
           {/* 30 dynamic dust particles */}
-          {dustParticles.map((d, i) => (
+          {DUST_PARTICLES.map((d, i) => (
             <i
               key={i}
               ref={(el) => {

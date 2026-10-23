@@ -51,8 +51,23 @@ http.createServer((req, res) => {
   if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, "index.html");
   if (!fs.existsSync(file)) { res.writeHead(404).end("not found"); return; }
 
-  const ext = path.extname(file).toLowerCase();
-  const stat = fs.statSync(file);
+  // Prevent symlink traversal outside the root directory
+  let realFile;
+  try {
+    const realRoot = fs.realpathSync(ROOT);
+    const realBase = realRoot.endsWith(path.sep) ? realRoot : realRoot + path.sep;
+    realFile = fs.realpathSync(file);
+    if (realFile !== realRoot && !realFile.startsWith(realBase)) {
+      res.writeHead(403).end("forbidden");
+      return;
+    }
+  } catch {
+    res.writeHead(403).end("forbidden");
+    return;
+  }
+
+  const ext = path.extname(realFile).toLowerCase();
+  const stat = fs.statSync(realFile);
   res.writeHead(200, {
     "Content-Type": TYPES[ext] || "application/octet-stream",
     "Content-Length": stat.size,
@@ -61,7 +76,12 @@ http.createServer((req, res) => {
     "Cache-Control": "no-store",
     "Accept-Ranges": "bytes",
   });
-  fs.createReadStream(file).pipe(res);
+  const stream = fs.createReadStream(realFile);
+  stream.on("error", () => {
+    if (!res.headersSent) res.writeHead(500);
+    res.end();
+  });
+  stream.pipe(res);
 }).listen(PORT, HOST, () => {
   console.log(`scrollcraft: ${ROOT}\n  http://localhost:${PORT}`);
   if (!LAN) return;
